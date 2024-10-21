@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Create Contract Address</title>
+  <script src="https://cdn.jsdelivr.net/npm/web3@1.7.0/dist/web3.min.js"></script>
+</head>
+<body>
+  <h1>Contract Address Generator</h1>
+  
+  <label for="address">Enter Address:</label>
+  <input type="text" id="address" placeholder="0x..." /><br><br>
+
+  <label for="nonce">Enter Nonce:</label>
+  <input type="number" id="nonce" placeholder="Nonce" /><br><br>
+
+  <button onclick="generateContractAddress()">Generate Contract Address</button>
+
+  <p id="result">Computed Contract Address will appear here.</p>
+
+  <script>
+    function createContractAddress(from, nonce) {
+      const web3 = new Web3();
+
+      if (!web3.utils.isAddress(from)) {
+        throw new Error(`Invalid address given: ${from}`);
+      }
+
+      let nonceValue = nonce;
+      if (typeof nonce === 'string' && web3.utils.isHexStrict(nonce)) {
+        nonceValue = web3.utils.hexToNumber(nonce);
+      } else if (typeof nonce === 'string' && !web3.utils.isHexStrict(nonce)) {
+        throw new Error('Invalid nonce value format');
+      }
+
+      const rlpEncoded = web3.utils.encodePacked(
+        { t: 'address', v: from },
+        { t: 'uint', v: nonceValue }
+      );
+
+      const result = web3.utils.keccak256(rlpEncoded);
+      const contractAddress = '0x' + result.substring(26);
+      return web3.utils.toChecksumAddress(contractAddress);
+    }
+
+    function generateContractAddress() {
+      const fromAddress = document.getElementById('address').value;
+      const nonce = parseInt(document.getElementById('nonce').value);
+
+      try {
+        const contractAddress = createContractAddress(fromAddress, nonce);
+        document.getElementById('result').innerText = 'Computed Contract Address: ' + contractAddress;
+      } catch (error) {
+        document.getElementById('result').innerText = 'Error: ' + error.message;
+      }
+    }
+  </script>
+</body>
+</html>
